@@ -136,10 +136,18 @@ typedef struct ACCEL_LSM303D
 	int16_t x_accel;
 	int16_t y_accel;
 	int16_t z_accel;
+
+	uint8_t accel_x_low;
+	uint8_t accel_x_high;
+	uint8_t accel_y_low;
+	uint8_t accel_y_high;
+	uint8_t accel_z_low;
+	uint8_t accel_z_high;
+
 	float conversion;
-	ACCEL_DATA_RATE data_rate;    //CTRL1
-	ACCEL_AA_FILTER aa_filter;    //CTRL2
-	ACCEL_FS full_scale;          //CTRL2
+//	ACCEL_DATA_RATE data_rate;    //CTRL1
+//	ACCEL_AA_FILTER aa_filter;    //CTRL2
+//	ACCEL_FS full_scale;          //CTRL2
 } ACCEL_LSM303D;
 
 /*Magnetic full-scale selections
@@ -181,21 +189,26 @@ typedef struct MAG_LSM303D
 	int16_t y_mag;
 	int16_t z_mag;
 	float conversion;
-	MAG_FS full_scale;        //CTRL5
-	MAG_SENS_SEL sens_sel;    //CTRL7
-	MAG_DATA_RATE data_rate;  //CTRL5
+//	MAG_FS full_scale;        //CTRL5
+//	MAG_SENS_SEL sens_sel;    //CTRL7
+//	MAG_DATA_RATE data_rate;  //CTRL5
 } MAG_LSM303D;
 
 ACCEL_LSM303D accel;		//global accelerometer struct
-MAG_LSM303D mag;			//global magnetometer struct
+//MAG_LSM303D mag;			//global magnetometer struct
 
+//HAL_StatusTypeDef accel_init( I2C_HandleTypeDef *hi2c, ACCEL_LSM303D *accel, ACCEL_DATA_RATE data_rate, ACCEL_AA_FILTER aa_filter, ACCEL_FS full_scale);
 HAL_StatusTypeDef accel_init( I2C_HandleTypeDef *hi2c, ACCEL_DATA_RATE data_rate, ACCEL_AA_FILTER aa_filter, ACCEL_FS full_scale);
+
+
 HAL_StatusTypeDef mag_init( I2C_HandleTypeDef *hi2c, MAG_DATA_RATE data_rate, int filter_enable, MAG_FS full_scale,  MAG_SENS_SEL sens_sel);
 
+//HAL_StatusTypeDef read_accel(I2C_HandleTypeDef *hi2c, ACCEL_LSM303D *accel);
 HAL_StatusTypeDef read_accel(I2C_HandleTypeDef *hi2c);
+
 HAL_StatusTypeDef read_mag(I2C_HandleTypeDef *hi2c);
 
-static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, int16_t *output);
+static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, uint8_t *output_high, uint8_t *output_low);
 
 
 #endif

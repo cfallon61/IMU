@@ -89,9 +89,9 @@ typedef enum GYRO_DATA_RATE_t
 
 typedef enum GYRO_FULL_SCALE_t
 {
-	FS_245_DPS	  	= 0x00,   //Sensitivity: 8.75 mdps/digit		DEFUALT
-	FS_500_DPS   	= 0x01,   //Sensitivity: 17.50 mdps/digit
-	FS_2000_DPS  	= 0x02,   //Sensitivity: 70.00 mdps/digit
+	FS_245_DPS	  	= 0x00,   //Sensitivity: 8.75  mdps/LSB		DEFUALT
+	FS_500_DPS   	= 0x01,   //Sensitivity: 17.50 mdps/LSB
+	FS_2000_DPS  	= 0x02,   //Sensitivity: 70.00 mdps/LSB
 }GYRO_FULL_SCALE;
 
 typedef struct L3GD20H_GYRO
@@ -99,9 +99,17 @@ typedef struct L3GD20H_GYRO
 	int16_t gyro_x_out;
 	int16_t gyro_y_out;
 	int16_t gyro_z_out;
+
+	uint8_t gyro_x_low;
+	uint8_t gyro_x_high;
+	uint8_t gyro_y_low;
+	uint8_t gyro_y_high;
+	uint8_t gyro_z_low;
+	uint8_t gyro_z_high;
+
 	float sensitivity;
-	GYRO_DATA_RATE data_rate;
-	GYRO_FULL_SCALE full_scale;
+//	GYRO_DATA_RATE data_rate;
+//	GYRO_FULL_SCALE full_scale;
 }L3GD20H_GYRO;
 
 L3GD20H_GYRO gyro;
@@ -112,10 +120,14 @@ L3GD20H_GYRO gyro;
  * GYRO_MEASUREMENT_RANGE range -- the full-scale range of the gyroscope, range: [245 degrees/sec, 2000 degrees/sec]
  * int high_pass_filter			-- enable high-pass filter, default 0 (disabled)*/
 
-static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, int16_t *output);
+static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, uint8_t *output_high, uint8_t *output_low);
 
+//HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, L3GD20H_GYRO *gyro, GYRO_DATA_RATE data_rate, GYRO_FULL_SCALE full_scale, int high_pass_filter);
 HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, GYRO_FULL_SCALE full_scale, int high_pass_filter);
+
+//HAL_StatusTypeDef read_gyro(I2C_HandleTypeDef *hi2c, L3GD20H_GYRO *gyro);
 HAL_StatusTypeDef read_gyro(I2C_HandleTypeDef *hi2c);
+
 
 
 #endif

@@ -28,13 +28,13 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: IMU.elf
+all: IMU2.elf
 
 # Tool invocations
-IMU.elf: $(OBJS) $(USER_OBJS) ../STM32L432KCUx_FLASH.ld
+IMU2.elf: $(OBJS) $(USER_OBJS) ../STM32L432KCUx_FLASH.ld
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU GCC Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs=nosys.specs -specs=nano.specs -T"../STM32L432KCUx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "IMU.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs=nosys.specs -specs=nano.specs -T"../STM32L432KCUx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "IMU2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
@@ -45,9 +45,9 @@ clean:
 	-@echo ' '
 
 post-build:
-	-@echo 'Generating binary and Printing size information:'
-	arm-none-eabi-objcopy -O binary "IMU.elf" "IMU.bin"
-	arm-none-eabi-size "IMU.elf"
+	-@echo 'Generating hex and Printing size information:'
+	arm-none-eabi-objcopy -O ihex "IMU2.elf" "IMU2.hex"
+	arm-none-eabi-size "IMU2.elf"
 	-@echo ' '
 
 .PHONY: all clean dependents

@@ -1,3 +1,4 @@
+
 /**
   ******************************************************************************
   * @file           : main.c
@@ -42,18 +43,27 @@
 /* USER CODE BEGIN Includes */
 #include "lsm303d.h"
 #include "l3gd20h.h"
+//#include "imu.h"
+#include "daq.h"
+//#include "imu.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+
+CAN_HandleTypeDef hcan1;
 
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
 
+//IMU_TypeDef imu;
+DAQ_TypeDef daq;
+/* Private variables ---------------------------------------------------------*/
+//IMU_TypeDef imu;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,6 +72,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +82,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN 0 */
 
 float x_a_out, y_a_out, z_a_out, x_g_out, y_g_out, z_g_out = 0;
-uint32_t adc;
+
 
 /* USER CODE END 0 */
 
@@ -107,53 +118,35 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_ADC1_Init();
+  MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+//  if the devices were not intitialized properly, then loop and blink led forever
 
-  //if the value of the device found matches the LSM303D address, turn off the LED
+//  if ( accel_init(&hi2c1, ACCEL_DR_100_Hz, AA_50_Hz, ACCEL_4G) != HAL_OK
+//		  || gyro_init(&hi2c1, GYRO_DR_100_Hz, FS_245_DPS, 0) != HAL_OK
+//		  || HAL_ADC_Start(&hadc1) != HAL_OK
+//		  || HAL_CAN_Start(&hcan1) != HAL_OK)
 
-  for (uint8_t i = 0; i < 255; i++)
-  {
-	  if(HAL_I2C_IsDeviceReady(&hi2c1, i, 2, 100) == HAL_OK)
-	  {
-		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		  break;
-	  }
-  }
-  HAL_Delay(5000);
+  if (daq_init(&hi2c1, &hadc1, &hcan1, &daq) != DAQ_OK)
 
-
-  if (accel_init(&hi2c1, ACCEL_DR_100_Hz, AA_50_Hz, ACCEL_4G) != HAL_OK)
   {
 	  while (1)
-	  {
+	  	  {
 		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		  HAL_Delay(1000);
 	  }
   }
 
-  HAL_Delay(100);
-
-  if ( gyro_init(&hi2c1, GYRO_DR_100_Hz, FS_245_DPS, 0) != HAL_OK)
-  {
-	  while (1)
-	  {
-		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		  HAL_Delay(5000);
-	  }
-  }
-
+  //else flash led quickly to display it is ready
   else
   {
-	  for (int i = 0; i < 5; i++)
+	  HAL_Delay(500);
+	  for (int i = 0; i < 6; i++)
 	  {
 		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		  HAL_Delay(300);
+		  HAL_Delay(150);
 	  }
   }
-
-  HAL_Delay(1000);
-  HAL_ADC_Start(&hadc1);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -165,37 +158,63 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
-	  HAL_ADC_PollForConversion(&hadc1, 1000);
-	  adc = HAL_ADC_GetValue(&hadc1);
-
-	  if (read_accel(&hi2c1) != HAL_OK)
+//	  if ( read_accel(&hi2c1) != HAL_OK || read_gyro(&hi2c1) != HAL_OK || HAL_ADC_PollForConversion(&hadc1, 1000) != HAL_OK)
+	  if (daq_read_data(&daq) != DAQ_OK)
 	  {
 		  while (1)
 		  {
+			  for (uint8_t i = 0; i < 5; i++)
+			  {
+				  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+				  HAL_Delay(300);
+			  }
 			  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-			  HAL_Delay(300);
+			  HAL_Delay(2000);
 		  }
 	  }
+
+	  for (uint8_t i = 0; i < 7; i++)
+	  {
+		  if (daq_send_imu_data(&daq, i) != DAQ_OK)
+		  {
+			  while(1)
+			  {
+				  for (uint8_t i = 0; i < 5; i++)
+				  {
+					  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+					  HAL_Delay(1000);
+				  }
+				  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+				  HAL_Delay(2000);
+			  }
+		  }
+		  HAL_Delay(50);
+//		  daq_send_adc_data(&daq);
+	  }
+
+//	 daq_send_imu_data(&daq, ACCEL_X);
+//	 daq_send_imu_data(&daq, ACCEL_Y);
+//	 daq_send_imu_data(&daq, ACCEL_Z);
+//	 daq_send_imu_data(&daq, GYRO_X);
+//	 daq_send_imu_data(&daq, GYRO_Y);
+//	 daq_send_imu_data(&daq, GYRO_Z);
+//	 daq_send_adc_data(&daq);
+
+//	  accel.x_accel = ( (int16_t) accel.accel_x_high << 8 ) | ( (int16_t) accel.accel_x_low ) ;
+//	  accel.y_accel = ( (int16_t) accel.accel_y_high << 8 ) | ( (int16_t) accel.accel_y_low ) ;
+//	  accel.z_accel = ( (int16_t) accel.accel_z_high << 8 ) | ( (int16_t) accel.accel_z_low ) ;
 
 	  x_a_out = accel.x_accel * accel.conversion;
 	  y_a_out = accel.y_accel * accel.conversion;
 	  z_a_out = accel.z_accel * accel.conversion;
-
-	  if (read_gyro(&hi2c1) != HAL_OK)
-	  {
-		  while (1)
-		  {
-		  	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		  	  HAL_Delay(300);
-		  }
-	  }
-
+//
+//	  gyro.gyro_x_out = ( (int16_t) gyro.gyro_x_high << 8 ) | ( (int16_t) gyro.gyro_x_low );
+//	  gyro.gyro_y_out = ( (int16_t) gyro.gyro_y_high << 8 ) | ( (int16_t) gyro.gyro_y_low );
+//	  gyro.gyro_z_out = ( (int16_t) gyro.gyro_z_high << 8 ) | ( (int16_t) gyro.gyro_z_low );
+//
 	  x_g_out = gyro.gyro_x_out * gyro.sensitivity;
 	  y_g_out = gyro.gyro_y_out * gyro.sensitivity;
 	  z_g_out = gyro.gyro_z_out * gyro.sensitivity;
-
-
-
   }
   /* USER CODE END 3 */
 
@@ -214,6 +233,8 @@ void SystemClock_Config(void)
 
     /**Configure LSE Drive Capability 
     */
+  HAL_PWR_EnableBkUpAccess();
+
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
     /**Initializes the CPU, AHB and APB busses clocks 
@@ -307,7 +328,6 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfDiscConversion = 1;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.DMAContinuousRequests = DISABLE;
@@ -327,6 +347,29 @@ static void MX_ADC1_Init(void)
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* CAN1 init function */
+static void MX_CAN1_Init(void)
+{
+
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 4;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_9TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_6TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = ENABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -373,7 +416,7 @@ static void MX_USART2_UART_Init(void)
 
   huart2.Instance = USART2;
   huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_7B;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;

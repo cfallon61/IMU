@@ -9,6 +9,8 @@
 HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, GYRO_FULL_SCALE full_scale, int high_pass_filter)
 {
 	HAL_StatusTypeDef status;
+	//	gyro.data_rate = data_rate;
+	//	gyro.full_scale = full_scale;
 
 //	if the device is not ready return error
 	if ((status = HAL_I2C_IsDeviceReady(hi2c, L3GD20H_ADDR, 2, 100)) != HAL_OK)
@@ -30,8 +32,7 @@ HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, G
 			break;
 	}
 	gyro.sensitivity = gyro.sensitivity / 1000;
-	gyro.data_rate = data_rate;
-	gyro.full_scale = full_scale;
+
 
 	/*INIT CTRL1
 	 * L3GD20H_CTRL1
@@ -45,7 +46,7 @@ HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, G
 	uint8_t bandwidth = 0x02 << 4;
 	uint8_t init = 0x00;
 
-	init = ( gyro.data_rate << 6 ) | bandwidth | ( 0x01 << 3) |
+	init = ( data_rate << 6 ) | bandwidth | ( 0x01 << 3) |
 			( 0x01 << 2 ) | ( 0x01 << 1 ) | 0x01;
 //	init = 0x6F;
 
@@ -65,7 +66,7 @@ HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, G
 	 * [2:1] Self-Test enable. Default: 0x00 (normal mode); 0x01: (self-test 0(+)); 0x02: (unused); 0x03: (self-test 1(-)) |
 	 * [0] SPI Mode selection. Default: 0 (4-Wire) - NOT NEEDED*/
 
-	init = gyro.full_scale << 4;
+	init = full_scale << 4;
 
 	/*write to CTRL4
 	 * continuous update, little endian mode, full-scale selection, defaults for the rest
@@ -107,21 +108,21 @@ HAL_StatusTypeDef read_gyro(I2C_HandleTypeDef *hi2c)
 
 	//read the X registers and write the raw values to the struct's x data point
 
-	if ((status = read_reg(hi2c, L3GD20H_OUT_X_H, L3GD20H_OUT_X_L, &gyro.gyro_x_out)) != HAL_OK)
+	if ((status = read_reg(hi2c, L3GD20H_OUT_X_H, L3GD20H_OUT_X_L, &gyro.gyro_x_high, &gyro.gyro_x_low)) != HAL_OK)
 	{
 		return status;
 	}
 
 	//read the Y registers and write the raw values to the struct's y data point
 
-	if ((status = read_reg(hi2c, L3GD20H_OUT_Y_H, L3GD20H_OUT_Y_L, &gyro.gyro_y_out)) != HAL_OK)
+	if ((status = read_reg(hi2c, L3GD20H_OUT_Y_H, L3GD20H_OUT_Y_L, &gyro.gyro_y_high, &gyro.gyro_y_low)) != HAL_OK)
 	{
 		return status;
 	}
 
 	//read the Z registers and write the raw values to the struct's z data point
 
-	if ((status = read_reg(hi2c, L3GD20H_OUT_Z_H, L3GD20H_OUT_Z_L, &gyro.gyro_z_out)) != HAL_OK)
+	if ((status = read_reg(hi2c, L3GD20H_OUT_Z_H, L3GD20H_OUT_Z_L, &gyro.gyro_z_high, &gyro.gyro_z_low)) != HAL_OK)
 	{
 		return status;
 	}
@@ -141,31 +142,24 @@ HAL_StatusTypeDef read_gyro(I2C_HandleTypeDef *hi2c)
  *retvalue: HAL_StatusTypeDef	--returns HAL_OK if no errors
  **/
 
-static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, int16_t *output)
+static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, uint8_t *out_high, uint8_t *out_low)
 {
 	HAL_StatusTypeDef status;
-	uint8_t data = 0x00;
-
 	//if there was an error reading the high storage address, set output to -10000 and return the error
 
-	if ((status = HAL_I2C_Mem_Read(hi2c, L3GD20H_ADDR, addr_high, 1,  &data, 1, 100)) != HAL_OK)
+	if ((status = HAL_I2C_Mem_Read(hi2c, L3GD20H_ADDR, addr_high, 1, out_high, 1, 100)) != HAL_OK)
 	{
-		*output = -10000;
 		return status;
 	}
 	//left shift the data and OR with the data from the high register
-	*output = (int16_t) data << 8;
 
 	//if there was an error reading the low storage address, set output to -10000 and return the error
 
-	if ((status = HAL_I2C_Mem_Read(hi2c, L3GD20H_ADDR, addr_low, 1, &data, 1, 100)) != HAL_OK)
+	if ((status = HAL_I2C_Mem_Read(hi2c, L3GD20H_ADDR, addr_low, 1, out_low, 1, 100)) != HAL_OK)
 	{
-		*output = -10000;
 		return status;
 	}
 	//OR the MSB with the data read from the register
-	*output |= data;
-
 	return HAL_OK;
 }
 

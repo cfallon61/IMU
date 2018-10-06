@@ -15,9 +15,9 @@ HAL_StatusTypeDef accel_init(I2C_HandleTypeDef *hi2c, ACCEL_DATA_RATE data_rate,
 		return status;
 	}
 
-	accel.aa_filter = aa_filter;
-	accel.full_scale = full_scale;
-	accel.data_rate = data_rate;
+//	accel.aa_filter = aa_filter;
+//	accel.full_scale = full_scale;
+//	accel.data_rate = data_rate;
 
 
 	/*Set the conversion rate for the accelerometer readings based on the full-scale selection
@@ -109,27 +109,24 @@ HAL_StatusTypeDef accel_init(I2C_HandleTypeDef *hi2c, ACCEL_DATA_RATE data_rate,
  *retvalue: HAL_StatusTypeDef		--returns HAL_OK if no errors
  **/
 
-static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, int16_t *output)
+static HAL_StatusTypeDef read_reg(I2C_HandleTypeDef *hi2c, uint8_t addr_high, uint8_t addr_low, uint8_t *out_high, uint8_t *out_low)
 {
-	uint8_t data;
 	HAL_StatusTypeDef status;
 
-	//read the high register for the x axis, return status if error
-	if ((status = HAL_I2C_Mem_Read(hi2c, LSM303D_ADDR, addr_high, 1, &data, 1, 10)) != HAL_OK)
+	//read the low register for the axis, return status if error
+	if ((status = HAL_I2C_Mem_Read(hi2c, LSM303D_ADDR, addr_low,  1, out_low,  1, 10)) != HAL_OK)
 	{
-		*output = -10000;
 		return status;
 	}
-	//left shift data value by 8 and set output equal to this value;
-	*output = (int16_t) data << 8;
-
-	if ((status = HAL_I2C_Mem_Read(hi2c, LSM303D_ADDR, addr_low, 1, &data, 1, 10)) != HAL_OK)
+	//read the high register for the axis, return status if error
+	if ((status = HAL_I2C_Mem_Read(hi2c, LSM303D_ADDR, addr_high, 1, out_high, 1, 10)) != HAL_OK)
 	{
-		*output = -10000;
 		return status;
 	}
 
-	*output |= data;
+
+
+
 
 	return HAL_OK;
 }
@@ -143,19 +140,19 @@ HAL_StatusTypeDef read_accel(I2C_HandleTypeDef *hi2c)
 	HAL_StatusTypeDef status;
 
 	//read the high register for the x axis, return status if error
-	if ((status = read_reg(hi2c, LSM303D_OUT_X_H_A, LSM303D_OUT_X_L_A, &accel.x_accel)) != HAL_OK)
+	if ((status = read_reg(hi2c, LSM303D_OUT_X_H_A, LSM303D_OUT_X_L_A, &accel.accel_x_high, &accel.accel_x_low)) != HAL_OK)
 	{
 		return status;
 	}
 
 	//read the high register for the y axis, return status if error
-	if ((status = read_reg(hi2c, LSM303D_OUT_Y_H_A, LSM303D_OUT_Y_L_A, &accel.y_accel)) != HAL_OK)
+	if ((status = read_reg(hi2c, LSM303D_OUT_Y_H_A, LSM303D_OUT_Y_L_A, &accel.accel_y_high, &accel.accel_y_low)) != HAL_OK)
 	{
 		return status;
 	}
 
 	//read the high register for the z axis, return status if error
-	if ((status = read_reg(hi2c, LSM303D_OUT_Z_H_A, LSM303D_OUT_Z_L_A, &accel.z_accel)) != HAL_OK)
+	if ((status = read_reg(hi2c, LSM303D_OUT_Z_H_A, LSM303D_OUT_Z_L_A, &accel.accel_z_high, &accel.accel_z_low)) != HAL_OK)
 	{
 		return status;
 	}

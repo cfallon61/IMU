@@ -9,8 +9,6 @@
 HAL_StatusTypeDef gyro_init(I2C_HandleTypeDef *hi2c, GYRO_DATA_RATE data_rate, GYRO_FULL_SCALE full_scale, int high_pass_filter)
 {
 	HAL_StatusTypeDef status;
-	//	gyro.data_rate = data_rate;
-	//	gyro.full_scale = full_scale;
 
 //	if the device is not ready return error
 	if ((status = HAL_I2C_IsDeviceReady(hi2c, L3GD20H_ADDR, 2, 100)) != HAL_OK)

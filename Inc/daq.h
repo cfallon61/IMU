@@ -21,7 +21,6 @@ typedef struct
 {
 	I2C_HandleTypeDef *hi2c;
 	ADC_HandleTypeDef *hadc;
-	CAN_TxHeaderTypeDef *header;
 	CAN_HandleTypeDef *hcan;
 	uint32_t adc;
 	uint32_t tick;

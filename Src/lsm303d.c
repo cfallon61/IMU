@@ -15,10 +15,6 @@ HAL_StatusTypeDef accel_init(I2C_HandleTypeDef *hi2c, ACCEL_DATA_RATE data_rate,
 		return status;
 	}
 
-//	accel.aa_filter = aa_filter;
-//	accel.full_scale = full_scale;
-//	accel.data_rate = data_rate;
-
 
 	/*Set the conversion rate for the accelerometer readings based on the full-scale selection
 	 * Specified in LSB/mG*/

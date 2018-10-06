@@ -16,11 +16,6 @@ DAQ_Status_TypeDef daq_init(I2C_HandleTypeDef *hi2c, ADC_HandleTypeDef *hadc, CA
 	daq->hadc   = hadc;
 	daq->hi2c 	= hi2c;
 
-	daq->header->IDE = CAN_ID_STD;
-	daq->header->RTR = CAN_RTR_DATA;
-	daq->header->DLC = 7;
-	daq->header->TransmitGlobalTime = DISABLE;
-
 	//initialize the accelerometer, return accelerometer error if failed
 	if (accel_init(daq->hi2c, ACCEL_DR_100_Hz, AA_50_Hz, ACCEL_4G) != HAL_OK)
 	{
@@ -102,8 +97,6 @@ DAQ_Status_TypeDef daq_send_adc_data(DAQ_TypeDef *daq)
 	header.DLC = 7;
 	header.TransmitGlobalTime = DISABLE;
 
-//	daq->header->StdId = ADC_ADDR;
-
 	data[3] = (uint8_t) (daq->adc >> 24);
 	data[2] = (uint8_t) (daq->adc >> 16);
 	data[1] = (uint8_t) (daq->adc >> 8);
@@ -113,11 +106,12 @@ DAQ_Status_TypeDef daq_send_adc_data(DAQ_TypeDef *daq)
 	data[5] = (uint8_t) (temp_tick >> 8);
 	data[4] = (uint8_t) (temp_tick);
 
+	while (HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan) == 0); // while mailboxes not free
+
 	if ( HAL_CAN_AddTxMessage(daq->hcan, &header, data, &mailbox) != HAL_OK)
 	{
 		return CAN_ERROR;
 	}
-	while (HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan) == 0); // while mailboxes not free
 
 	return DAQ_OK;
 }
@@ -129,8 +123,6 @@ DAQ_Status_TypeDef daq_send_imu_data(DAQ_TypeDef *daq, IMU_Data_TypeDef data_typ
 	uint8_t data[8];
 	data[6] = 0;
 	data[7] = 0;
-
-//	daq->header->StdId = IMU_ADDR;
 
 	CAN_TxHeaderTypeDef header;
 	header.StdId = IMU_ADDR;
@@ -186,7 +178,6 @@ DAQ_Status_TypeDef daq_send_imu_data(DAQ_TypeDef *daq, IMU_Data_TypeDef data_typ
 	{
 		return CAN_ERROR;
 	}
-
 
 	return DAQ_OK;
 

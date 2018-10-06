@@ -183,8 +183,7 @@ int main(void)
 				  HAL_Delay(2000);
 			  }
 		  }
-//		  HAL_Delay(50);
-//		  daq_send_adc_data(&daq);
+		  daq_send_adc_data(&daq);
 	  }
 
 //	 daq_send_imu_data(&daq, ACCEL_X);
@@ -198,18 +197,18 @@ int main(void)
 //	  accel.x_accel = ( (int16_t) accel.accel_x_high << 8 ) | ( (int16_t) accel.accel_x_low ) ;
 //	  accel.y_accel = ( (int16_t) accel.accel_y_high << 8 ) | ( (int16_t) accel.accel_y_low ) ;
 //	  accel.z_accel = ( (int16_t) accel.accel_z_high << 8 ) | ( (int16_t) accel.accel_z_low ) ;
-
-	  x_a_out = accel.x_accel * accel.conversion;
-	  y_a_out = accel.y_accel * accel.conversion;
-	  z_a_out = accel.z_accel * accel.conversion;
+//
+//	  x_a_out = accel.x_accel * accel.conversion;
+//	  y_a_out = accel.y_accel * accel.conversion;
+//	  z_a_out = accel.z_accel * accel.conversion;
 //
 //	  gyro.gyro_x_out = ( (int16_t) gyro.gyro_x_high << 8 ) | ( (int16_t) gyro.gyro_x_low );
 //	  gyro.gyro_y_out = ( (int16_t) gyro.gyro_y_high << 8 ) | ( (int16_t) gyro.gyro_y_low );
 //	  gyro.gyro_z_out = ( (int16_t) gyro.gyro_z_high << 8 ) | ( (int16_t) gyro.gyro_z_low );
 //
-	  x_g_out = gyro.gyro_x_out * gyro.sensitivity;
-	  y_g_out = gyro.gyro_y_out * gyro.sensitivity;
-	  z_g_out = gyro.gyro_z_out * gyro.sensitivity;
+//	  x_g_out = gyro.gyro_x_out * gyro.sensitivity;
+//	  y_g_out = gyro.gyro_y_out * gyro.sensitivity;
+//	  z_g_out = gyro.gyro_z_out * gyro.sensitivity;
   }
   /* USER CODE END 3 */
 

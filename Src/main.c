@@ -120,13 +120,8 @@ int main(void)
   MX_ADC1_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+
 //  if the devices were not intitialized properly, then loop and blink led forever
-
-//  if ( accel_init(&hi2c1, ACCEL_DR_100_Hz, AA_50_Hz, ACCEL_4G) != HAL_OK
-//		  || gyro_init(&hi2c1, GYRO_DR_100_Hz, FS_245_DPS, 0) != HAL_OK
-//		  || HAL_ADC_Start(&hadc1) != HAL_OK
-//		  || HAL_CAN_Start(&hcan1) != HAL_OK)
-
   if (daq_init(&hi2c1, &hadc1, &hcan1, &daq) != DAQ_OK)
 
   {
@@ -188,7 +183,7 @@ int main(void)
 				  HAL_Delay(2000);
 			  }
 		  }
-		  HAL_Delay(50);
+//		  HAL_Delay(50);
 //		  daq_send_adc_data(&daq);
 	  }
 

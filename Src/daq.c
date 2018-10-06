@@ -94,6 +94,7 @@ DAQ_Status_TypeDef daq_send_adc_data(DAQ_TypeDef *daq)
 	uint32_t temp_tick = uwTick;
 
 	daq->tick = temp_tick;
+
 	CAN_TxHeaderTypeDef header;
 	header.StdId = ADC_ADDR;
 	header.IDE= CAN_ID_STD;
@@ -116,7 +117,7 @@ DAQ_Status_TypeDef daq_send_adc_data(DAQ_TypeDef *daq)
 	{
 		return CAN_ERROR;
 	}
-	while (!HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan)); // while mailboxes not free
+	while (HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan) == 0); // while mailboxes not free
 
 	return DAQ_OK;
 }
@@ -125,9 +126,12 @@ DAQ_Status_TypeDef daq_send_imu_data(DAQ_TypeDef *daq, IMU_Data_TypeDef data_typ
 {
 	uint32_t mailbox;
 
-	uint8_t data[6];
+	uint8_t data[8];
+	data[6] = 0;
+	data[7] = 0;
 
 //	daq->header->StdId = IMU_ADDR;
+
 	CAN_TxHeaderTypeDef header;
 	header.StdId = IMU_ADDR;
 	header.IDE= CAN_ID_STD;
@@ -176,11 +180,13 @@ DAQ_Status_TypeDef daq_send_imu_data(DAQ_TypeDef *daq, IMU_Data_TypeDef data_typ
 	data [4] = (uint8_t) (temp_tick >> 8);
 	data [3] = (uint8_t) (temp_tick >> 16);
 
+	while (HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan) == 0); // while mailboxes not free
+
 	if (HAL_CAN_AddTxMessage(daq->hcan, &header, data, &mailbox) != HAL_OK)
 	{
 		return CAN_ERROR;
 	}
-	while (!HAL_CAN_GetTxMailboxesFreeLevel(daq->hcan)); // while mailboxes not free
+
 
 	return DAQ_OK;
 
